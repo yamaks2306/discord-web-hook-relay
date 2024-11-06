@@ -64,6 +64,14 @@ def get_webhook_url(path: str) -> Optional[str]:
 
 def main(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
+        # Check API key
+        headers = args.get('__ow_headers', {})
+        if not validate_api_key(headers):
+            return {
+                "statusCode": 401,
+                "body": json.dumps({"error": "Invalid or missing API key"})
+            }
+
         # Constructing the request body from the root of args
         body = {
             "content": args.get("content"),

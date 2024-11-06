@@ -12,14 +12,9 @@ The service automatically adds appropriate colors to the Discord embeds based on
 
 ## API Usage
 
-### Endpoints
-
-- `/warning` - for warning messages (yellow)
-- `/critical` - for critical messages (red)
-
 ### Authentication
 
-All requests must include an API key in the `X-API-Key` header.
+All requests must include an API key in the `X-API-Key` header. Requests without a valid API key will receive a 401 Unauthorized response.
 
 ### Request Format
 
@@ -44,7 +39,12 @@ curl -X POST \
   https://your-domain/api/warning  # or /critical
 ```
 
-### Request Body Schema
+### Endpoints
+
+- `/warning` - for warning messages (yellow)
+- `/critical` - for critical messages (red)
+
+### Request Format
 
 - `content` (optional): String message that appears above the embed
 - `embeds`: Array of embed objects (currently only the first embed is processed)
