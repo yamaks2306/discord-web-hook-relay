@@ -1,0 +1,22 @@
+parameters: {}
+environment: {}
+packages:
+    - name: discord-webhook-relay
+      shared: false
+      environment: {}
+      parameters: {}
+      annotations: {}
+      functions:
+        - name: send
+          binary: false
+          main: ""
+          runtime: python:default
+          web: true
+          webSecure: false
+          parameters: {}
+          environment:
+            DISCORD_WEBHOOK_URL_WARNING: ${DISCORD_WEBHOOK_URL_WARNING}
+            DISCORD_WEBHOOK_URL_CRITICAL: ${DISCORD_WEBHOOK_URL_CRITICAL}
+            API_KEY: ${API_KEY}
+          annotations: {}
+          limits: {}
