@@ -78,12 +78,16 @@ def main(args: Dict[str, Any]) -> Dict[str, Any]:
             "embeds": args.get("embeds", [])
         }
         
-        # Add color based on the importance level
+        # Add color based on the importance level if AUTO_COLORS is enabled
         if not body.get('embeds'):
             body['embeds'] = [{}]
             
         path = args.get('__ow_path', '').strip('/')
-        body['embeds'][0]['color'] = 16776960 if path == 'warning' else 16711680
+        
+        # Check if auto colors are enabled (defaults to True if not set)
+        auto_colors = os.environ.get('AUTO_COLORS', 'true').lower() == 'true'
+        if auto_colors:
+            body['embeds'][0]['color'] = 16776960 if path == 'warning' else 16711680
 
         # Check if there is any content in the first embed
         if not any([

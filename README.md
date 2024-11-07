@@ -61,6 +61,7 @@ Note: At least one of `title`, `description`, or `fields` must be present in the
 
 - 200: Message successfully sent
 - 400: Invalid request (missing required fields or invalid format)
+- 401: Unauthorized (invalid API key)
 - 500: Server error or Discord API error
 
 ### Example Response
@@ -86,6 +87,7 @@ The following environment variables must be set:
 - `API_KEY`: Secret key for authenticating requests
 - `DISCORD_WEBHOOK_URL_WARNING`: Discord webhook URL for warning messages
 - `DISCORD_WEBHOOK_URL_CRITICAL`: Discord webhook URL for critical messages
+- `AUTO_COLORS`: Boolean, whether to automatically add colors to the embeds (defaults to `false`)
 
 ## Deployment
 
@@ -97,11 +99,17 @@ The following environment variables must be set:
 
 ### Environment Setup
 
-1. Create a `.env` file with the following variables:
+1. Generate a secret API key:
 ```bash
-API_KEY=your-secret-api-key
+API_KEY=$(openssl rand -hex 32)
+```
+
+2. Create a `.env` file with the following variables:
+```bash
+API_KEY=$API_KEY
 DISCORD_WEBHOOK_URL_WARNING=https://discord.com/api/webhooks/...
 DISCORD_WEBHOOK_URL_CRITICAL=https://discord.com/api/webhooks/...
+AUTO_COLORS=true
 ```
 
 2. Connect to your Digital Ocean account:
