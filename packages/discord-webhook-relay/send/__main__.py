@@ -43,33 +43,70 @@ class DiscordWebhook(BaseModel):
     class Config:
         extra = "forbid"
 
-def validate_api_key(headers: Dict[str, str]) -> bool:
-    """Check API key from headers"""
+def validate_api_key(path: str) -> bool:
+    """Check API key from path"""
     expected_key = os.environ.get('API_KEY')
     if not expected_key:
         return False
     
-    # Getting the key from the X-API-Key header
-    provided_key = headers.get('x-api-key')
+    # Extract API key from path
+    path_parts = path.strip('/').split('/')
+    if len(path_parts) < 2:
+        return False
+        
+    provided_key = path_parts[-2]
     return provided_key == expected_key
 
 def get_webhook_url(path: str) -> Optional[str]:
     """Get webhook URL based on the path"""
-    path = path.strip('/')
-    if path == 'warning':
+    path_parts = path.strip('/').split('/')
+    if len(path_parts) < 2:
+        return None
+        
+    # Use the last part of the path for webhook type
+    webhook_type = path_parts[-1]
+    if webhook_type == 'warning':
         return os.environ.get('DISCORD_WEBHOOK_URL_WARNING')
-    elif path == 'critical':
+    elif webhook_type == 'critical':
         return os.environ.get('DISCORD_WEBHOOK_URL_CRITICAL')
     return None
 
 def main(args: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        # Check API key
-        headers = args.get('__ow_headers', {})
-        if not validate_api_key(headers):
+        path = args.get('__ow_path', '').strip('/')
+        path_parts = path.strip('/').split('/')
+        
+        # Check if debug mode is enabled (defaults to False)
+        debug_mode = os.environ.get('DEBUG_MODE', 'false').lower() == 'true'
+        
+        debug_info = {
+            "original_path": path,
+            "path_parts": path_parts,
+            "api_key_from_path": path_parts[-2] if len(path_parts) >= 2 else None,
+            "webhook_type": path_parts[-1] if len(path_parts) >= 1 else None,
+            "expected_api_key": None, # os.environ.get('API_KEY'),
+            "webhook_url": None
+        }
+
+        if not validate_api_key(path):
             return {
                 "statusCode": 401,
-                "body": json.dumps({"error": "Invalid or missing API key"})
+                "body": json.dumps({
+                    "error": "Invalid or missing API key",
+                    "debug": debug_info if debug_mode else None
+                })
+            }
+
+        webhook_url = get_webhook_url(path)
+        debug_info["webhook_url"] = webhook_url
+        
+        if not webhook_url:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({
+                    "error": "Invalid webhook path",
+                    "debug": debug_info if debug_mode else None
+                })
             }
 
         # Constructing the request body from the root of args
@@ -82,7 +119,8 @@ def main(args: Dict[str, Any]) -> Dict[str, Any]:
         if not body.get('embeds'):
             body['embeds'] = [{}]
             
-        path = args.get('__ow_path', '').strip('/')
+        # Update path variable to use last part for webhook type
+        path = path.split('/')[-1] if len(path.split('/')) > 1 else ''
         
         # Check if auto colors are enabled (defaults to True if not set)
         auto_colors = os.environ.get('AUTO_COLORS', 'true').lower() == 'true'
@@ -111,14 +149,6 @@ def main(args: Dict[str, Any]) -> Dict[str, Any]:
                 "body": json.dumps({
                     "error": f"Validation error: {str(e)}"
                 })
-            }
-
-        # Getting webhook URL
-        webhook_url = get_webhook_url(path)
-        if not webhook_url:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "Invalid webhook path"})
             }
 
         # Send data to Discord

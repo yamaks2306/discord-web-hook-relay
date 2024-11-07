@@ -14,14 +14,13 @@ The service automatically adds appropriate colors to the Discord embeds based on
 
 ### Authentication
 
-All requests must include an API key in the `X-API-Key` header. Requests without a valid API key will receive a 401 Unauthorized response.
+API key should be included in the URL path. Requests without a valid API key will receive a 401 Unauthorized response.
 
 ### Request Format
 
 ```bash
 curl -X POST \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
   -d '{
     "content": "Optional message text",
     "embeds": [{
@@ -36,13 +35,13 @@ curl -X POST \
       ]
     }]
   }' \
-  https://your-domain/api/warning  # or /critical
+  https://your-domain/api/{api-key}/warning  # or /critical
 ```
 
 ### Endpoints
 
-- `/warning` - for warning messages (yellow)
-- `/critical` - for critical messages (red)
+- `/{api-key}/warning` - for warning messages (yellow)
+- `/{api-key}/critical` - for critical messages (red)
 
 ### Request Format
 
@@ -87,7 +86,8 @@ The following environment variables must be set:
 - `API_KEY`: Secret key for authenticating requests
 - `DISCORD_WEBHOOK_URL_WARNING`: Discord webhook URL for warning messages
 - `DISCORD_WEBHOOK_URL_CRITICAL`: Discord webhook URL for critical messages
-- `AUTO_COLORS`: Boolean, whether to automatically add colors to the embeds (defaults to `false`)
+- `AUTO_COLORS`: Boolean, whether to automatically add colors to the embeds (defaults to `true`)
+- `DEBUG_MODE`: Boolean, whether to include debug information in error responses (defaults to `false`)
 
 ## Deployment
 
@@ -144,7 +144,6 @@ Test the warning endpoint:
 ```bash
 curl -X POST \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
   -d '{
     "content": "Test message",
     "embeds": [{
@@ -152,7 +151,7 @@ curl -X POST \
       "description": "This is a test alert"
     }]
   }' \
-  https://your-deployment-url/warning
+  https://your-deployment-url/{api-key}/warning
 ```
 
 ### Updating the Function
