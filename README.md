@@ -87,13 +87,88 @@ The following environment variables must be set:
 - `DISCORD_WEBHOOK_URL_WARNING`: Discord webhook URL for warning messages
 - `DISCORD_WEBHOOK_URL_CRITICAL`: Discord webhook URL for critical messages
 
+## Deployment
+
+### Prerequisites
+
+1. Digital Ocean account with Functions enabled
+2. [doctl](https://docs.digitalocean.com/reference/doctl/how-to/install/) CLI tool installed
+3. Discord webhook URLs for both warning and critical levels
+
+### Environment Setup
+
+1. Create a `.env` file with the following variables:
+```bash
+API_KEY=your-secret-api-key
+DISCORD_WEBHOOK_URL_WARNING=https://discord.com/api/webhooks/...
+DISCORD_WEBHOOK_URL_CRITICAL=https://discord.com/api/webhooks/...
+```
+
+2. Connect to your Digital Ocean account:
+```bash
+doctl auth init
+doctl serverless install
+```
+
+### Deployment Steps
+
+1. Create a new namespace if you don't have one and connect to it:
+```bash
+# Digital Ocean api slugs: https://slugs.do-api.dev
+doctl serverless namespaces create --label discord-webhook-relay --region <region slug>
+doctl serverless namespaces list
+doctl serverless connect
+```
+
+2. Deploy the function:
+```bash
+doctl serverless deploy . --env .env --remote-build
+```
+
+3. Get the deployment URL:
+```bash
+doctl serverless functions get discord-webhook-relay/send
+```
+
+### Testing the Deployment
+
+Test the warning endpoint:
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "content": "Test message",
+    "embeds": [{
+      "title": "Test Alert",
+      "description": "This is a test alert"
+    }]
+  }' \
+  https://your-deployment-url/warning
+```
+
+### Updating the Function
+
+To update the deployed function:
+```bash
+doctl serverless deploy . --env .env --remote-build
+```
+
+### Monitoring and Logs
+
+View function logs:
+```bash
+doctl serverless activations logs
+```
+
+List recent activations:
+```bash
+doctl serverless activations list
+```
+
 ## Development
 
 The service is built using:
 - Python 3.x
 - Pydantic for request validation
 - Requests library for HTTP calls
-
-## Deployment
-
-The service is designed to run on Digital Ocean Functions or similar serverless platforms.
